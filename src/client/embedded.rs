@@ -1,11 +1,18 @@
+use crate::client::traits::ClientCapabilities;
+use crate::{AudioItem, Client, ClientOptions, Result, TrackFormats, YoutubeAudioSourceManager};
 use async_trait::async_trait;
-use crate::{Client, ClientOptions, AudioItem, YoutubeAudioSourceManager, TrackFormats, Result};
 
 #[derive(Debug, Clone)]
 pub struct WebEmbeddedClient {
     options: ClientOptions,
     po_token: Option<String>,
     visitor_data: Option<String>,
+}
+
+impl Default for WebEmbeddedClient {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WebEmbeddedClient {
@@ -25,7 +32,11 @@ impl WebEmbeddedClient {
         }
     }
 
-    pub fn set_po_token_and_visitor_data(&mut self, po_token: Option<String>, visitor_data: Option<String>) {
+    pub fn set_po_token_and_visitor_data(
+        &mut self,
+        po_token: Option<String>,
+        visitor_data: Option<String>,
+    ) {
         self.po_token = po_token;
         self.visitor_data = visitor_data;
     }
@@ -41,19 +52,27 @@ impl Client for WebEmbeddedClient {
         &self.options
     }
 
-    fn is_embedded(&self) -> bool {
-        true
-    }
-
-    fn can_handle_request(&self, identifier: &str) -> bool {
+    fn can_handle_request(&self, _identifier: &str) -> bool {
         // TODO: Implement URL pattern matching for embedded
         true
     }
 
+    fn get_capabilities(&self) -> ClientCapabilities {
+        // Web embedded clients support most features including embedded
+        ClientCapabilities {
+            oauth: true,
+            videos: true,
+            playlists: false, // Embedded clients typically don't support playlists
+            mixes: true,
+            search: true,
+            embedded: true,
+        }
+    }
+
     async fn load_video(
         &self,
-        source: &YoutubeAudioSourceManager,
-        video_id: &str,
+        _source: &YoutubeAudioSourceManager,
+        _video_id: &str,
     ) -> Result<Option<AudioItem>> {
         // TODO: Implement embedded video loading
         todo!("WebEmbeddedClient::load_video not implemented yet")
@@ -61,9 +80,9 @@ impl Client for WebEmbeddedClient {
 
     async fn load_playlist(
         &self,
-        source: &YoutubeAudioSourceManager,
-        playlist_id: &str,
-        selected_video_id: Option<&str>,
+        _source: &YoutubeAudioSourceManager,
+        _playlist_id: &str,
+        _selected_video_id: Option<&str>,
     ) -> Result<Option<AudioItem>> {
         // TODO: Implement embedded playlist loading
         todo!("WebEmbeddedClient::load_playlist not implemented yet")
@@ -71,8 +90,8 @@ impl Client for WebEmbeddedClient {
 
     async fn search(
         &self,
-        source: &YoutubeAudioSourceManager,
-        query: &str,
+        _source: &YoutubeAudioSourceManager,
+        _query: &str,
     ) -> Result<Option<AudioItem>> {
         // TODO: Implement embedded search
         todo!("WebEmbeddedClient::search not implemented yet")
@@ -80,8 +99,8 @@ impl Client for WebEmbeddedClient {
 
     async fn get_track_formats(
         &self,
-        source: &YoutubeAudioSourceManager,
-        video_id: &str,
+        _source: &YoutubeAudioSourceManager,
+        _video_id: &str,
     ) -> Result<TrackFormats> {
         // TODO: Implement embedded format loading
         todo!("WebEmbeddedClient::get_track_formats not implemented yet")
@@ -89,11 +108,15 @@ impl Client for WebEmbeddedClient {
 
     async fn load_mix(
         &self,
-        source: &YoutubeAudioSourceManager,
-        mix_id: &str,
-        selected_video_id: Option<&str>,
+        _source: &YoutubeAudioSourceManager,
+        _mix_id: &str,
+        _selected_video_id: Option<&str>,
     ) -> Result<Option<AudioItem>> {
         // TODO: Implement embedded mix loading
         todo!("WebEmbeddedClient::load_mix not implemented yet")
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }

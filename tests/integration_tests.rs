@@ -23,12 +23,12 @@ fn test_url_tools() {
         UrlTools::extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
         Some("dQw4w9WgXcQ".to_string())
     );
-    
+
     assert_eq!(
         UrlTools::extract_video_id("https://youtu.be/dQw4w9WgXcQ"),
         Some("dQw4w9WgXcQ".to_string())
     );
-    
+
     assert_eq!(
         UrlTools::extract_video_id("dQw4w9WgXcQ"),
         Some("dQw4w9WgXcQ".to_string())

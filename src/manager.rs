@@ -1,4 +1,4 @@
-use crate::{Client, YoutubeSourceOptions, AudioItem, Result};
+use crate::{AudioItem, Client, Result, YoutubeSourceOptions};
 
 #[derive(Clone)]
 pub struct YoutubeAudioSourceManager {
@@ -8,6 +8,12 @@ pub struct YoutubeAudioSourceManager {
     // TODO: Add cipher manager, oauth handler, etc.
 }
 
+impl Default for YoutubeAudioSourceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl YoutubeAudioSourceManager {
     pub fn new() -> Self {
         Self::with_options(YoutubeSourceOptions::default())
@@ -15,7 +21,9 @@ impl YoutubeAudioSourceManager {
 
     pub fn with_options(options: YoutubeSourceOptions) -> Self {
         let clients: Vec<std::sync::Arc<dyn Client>> = vec![
-            std::sync::Arc::new(crate::client::WebClient::new()),
+            std::sync::Arc::new(
+                crate::client::WebClient::new().expect("Failed to create WebClient"),
+            ),
             std::sync::Arc::new(crate::client::MusicClient::new()),
             std::sync::Arc::new(crate::client::AndroidClient::new()),
             std::sync::Arc::new(crate::client::WebEmbeddedClient::new()),
@@ -28,16 +36,34 @@ impl YoutubeAudioSourceManager {
         }
     }
 
+    pub fn with_options_and_clients(
+        options: YoutubeSourceOptions,
+        clients: Vec<Box<dyn Client>>,
+    ) -> Self {
+        let arc_clients: Vec<std::sync::Arc<dyn Client>> =
+            clients.into_iter().map(std::sync::Arc::from).collect();
+
+        Self {
+            options,
+            clients: arc_clients,
+            http_client: reqwest::Client::new(),
+        }
+    }
+
     pub async fn load_item(&self, identifier: &str) -> Result<Option<AudioItem>> {
         // TODO: Implement router logic
         let router = self.get_router(identifier).await?;
-        
+
         for client in &self.clients {
             if !client.can_handle_request(identifier) {
                 continue;
             }
 
-            log::debug!("Attempting to load {} with client \"{}\"", identifier, client.get_identifier());
+            log::debug!(
+                "Attempting to load {} with client \"{}\"",
+                identifier,
+                client.get_identifier()
+            );
 
             match router.route(client.as_ref(), self).await {
                 Ok(Some(item)) => return Ok(Some(item)),
@@ -60,9 +86,18 @@ impl YoutubeAudioSourceManager {
             // Check if it also has a playlist
             if let Some(playlist_id) = UrlTools::extract_playlist_id(identifier) {
                 if playlist_id.starts_with("RD") {
-                    return Ok(Router::Mix { mix_id: playlist_id, selected_video_id: Some(video_id) });
-                } else if !playlist_id.starts_with("LL") && !playlist_id.starts_with("WL") && !playlist_id.starts_with("LM") {
-                    return Ok(Router::Playlist { playlist_id, selected_video_id: Some(video_id) });
+                    return Ok(Router::Mix {
+                        mix_id: playlist_id,
+                        selected_video_id: Some(video_id),
+                    });
+                } else if !playlist_id.starts_with("LL")
+                    && !playlist_id.starts_with("WL")
+                    && !playlist_id.starts_with("LM")
+                {
+                    return Ok(Router::Playlist {
+                        playlist_id,
+                        selected_video_id: Some(video_id),
+                    });
                 }
             }
             return Ok(Router::Video { video_id });
@@ -71,15 +106,26 @@ impl YoutubeAudioSourceManager {
         // Check if it's a playlist URL
         if let Some(playlist_id) = UrlTools::extract_playlist_id(identifier) {
             if playlist_id.starts_with("RD") {
-                return Ok(Router::Mix { mix_id: playlist_id, selected_video_id: None });
-            } else if !playlist_id.starts_with("LL") && !playlist_id.starts_with("WL") && !playlist_id.starts_with("LM") {
-                return Ok(Router::Playlist { playlist_id, selected_video_id: None });
+                return Ok(Router::Mix {
+                    mix_id: playlist_id,
+                    selected_video_id: None,
+                });
+            } else if !playlist_id.starts_with("LL")
+                && !playlist_id.starts_with("WL")
+                && !playlist_id.starts_with("LM")
+            {
+                return Ok(Router::Playlist {
+                    playlist_id,
+                    selected_video_id: None,
+                });
             }
         }
 
         // Check if search is allowed
         if self.options.allow_search {
-            return Ok(Router::Search { query: identifier.to_string() });
+            return Ok(Router::Search {
+                query: identifier.to_string(),
+            });
         }
 
         Ok(Router::None)
@@ -87,27 +133,47 @@ impl YoutubeAudioSourceManager {
 }
 
 enum Router {
-    Video { video_id: String },
-    Playlist { playlist_id: String, selected_video_id: Option<String> },
-    Search { query: String },
-    Mix { mix_id: String, selected_video_id: Option<String> },
+    Video {
+        video_id: String,
+    },
+    Playlist {
+        playlist_id: String,
+        selected_video_id: Option<String>,
+    },
+    Search {
+        query: String,
+    },
+    Mix {
+        mix_id: String,
+        selected_video_id: Option<String>,
+    },
     None,
 }
 
 impl Router {
-    async fn route(&self, client: &dyn Client, source: &YoutubeAudioSourceManager) -> Result<Option<AudioItem>> {
+    async fn route(
+        &self,
+        client: &dyn Client,
+        source: &YoutubeAudioSourceManager,
+    ) -> Result<Option<AudioItem>> {
         match self {
-            Router::Video { video_id } => {
-                client.load_video(source, video_id).await
+            Router::Video { video_id } => client.load_video(source, video_id).await,
+            Router::Playlist {
+                playlist_id,
+                selected_video_id,
+            } => {
+                client
+                    .load_playlist(source, playlist_id, selected_video_id.as_deref())
+                    .await
             }
-            Router::Playlist { playlist_id, selected_video_id } => {
-                client.load_playlist(source, playlist_id, selected_video_id.as_deref()).await
-            }
-            Router::Search { query } => {
-                client.search(source, query).await
-            }
-            Router::Mix { mix_id, selected_video_id } => {
-                client.load_mix(source, mix_id, selected_video_id.as_deref()).await
+            Router::Search { query } => client.search(source, query).await,
+            Router::Mix {
+                mix_id,
+                selected_video_id,
+            } => {
+                client
+                    .load_mix(source, mix_id, selected_video_id.as_deref())
+                    .await
             }
             Router::None => Ok(None),
         }

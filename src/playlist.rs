@@ -1,4 +1,4 @@
-use crate::{AudioTrackInfo, YoutubeAudioTrack};
+use crate::YoutubeAudioTrack;
 
 #[derive(Debug, Clone)]
 pub struct YoutubePlaylist {

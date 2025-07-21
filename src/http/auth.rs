@@ -1,11 +1,17 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub struct YoutubeAccessTokenTracker {
     tokens: Arc<RwLock<HashMap<String, AccessToken>>>,
+}
+
+impl Default for YoutubeAccessTokenTracker {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl YoutubeAccessTokenTracker {
@@ -43,21 +49,21 @@ pub struct AccessToken {
 
 #[derive(Debug, Clone)]
 pub struct YoutubeOauth2Handler {
-    client_id: String,
-    client_secret: String,
-    redirect_uri: String,
+    _client_id: String,
+    _client_secret: String,
+    _redirect_uri: String,
 }
 
 impl YoutubeOauth2Handler {
     pub fn new(client_id: String, client_secret: String, redirect_uri: String) -> Self {
         Self {
-            client_id,
-            client_secret,
-            redirect_uri,
+            _client_id: client_id,
+            _client_secret: client_secret,
+            _redirect_uri: redirect_uri,
         }
     }
 
-    pub async fn refresh_token(&self, refresh_token: &str) -> crate::Result<AccessToken> {
+    pub async fn refresh_token(&self, _refresh_token: &str) -> crate::Result<AccessToken> {
         // TODO: Implement OAuth token refresh
         todo!("OAuth token refresh not implemented yet")
     }

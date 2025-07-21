@@ -7,9 +7,14 @@ edition = "2024"
 async-trait = "0.1.88"
 env_logger = "0.11.8"
 log = "0.4.27"
-reqwest = { version = "0.12.22", features = ["json"] }
+reqwest = { version = "0.12.22", features = ["json", "cookies"] }
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+serde_json = { version = "1.0.141", features = ["raw_value"] }
 thiserror = "2.0.12"
-tokio = { version = "1.46.1", features = ["full"] }
+tokio = { version = "1.46.1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 url = { version = "2.5.4", features = ["serde"] }
+regex = "1.11"
+uuid = { version = "1.17", features = ["v4"] }
+cookie_store = "0.21"
+urlencoding = "2.1"
+rquickjs = "0.9"

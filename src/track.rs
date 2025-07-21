@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use url::Url;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AudioTrackInfo {
@@ -92,11 +92,12 @@ impl TrackFormats {
         }
 
         best_format.ok_or_else(|| {
-            let available_types: Vec<String> = self.formats
+            let available_types: Vec<String> = self
+                .formats
                 .iter()
                 .map(|f| f.content_type.clone())
                 .collect();
-            crate::YoutubeError::Parse(format!(
+            crate::YoutubeError::ParseError(format!(
                 "No supported audio streams available, available types: {}",
                 available_types.join(", ")
             ))
@@ -107,7 +108,7 @@ impl TrackFormats {
         if format.info.is_none() {
             return false;
         }
-        
+
         match other {
             None => true,
             Some(other_format) => {

@@ -38,7 +38,7 @@ impl YoutubeSourceOptions {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ClientOptions {
     pub playback: bool,
     pub playlist_loading: bool,
