@@ -1,0 +1,61 @@
+server:
+  port: 2334
+  address: 0.0.0.0
+
+spring:
+  main:
+    banner-mode: log
+
+lavalink:
+  plugins:
+    # YouTube source plugin (our Rust implementation)
+    - dependency: "dev.lavalink.youtube:youtube-source-rust:latest"
+      repository: "https://maven.lavalink.dev/snapshots"
+  server:
+    password: "youshallnotpass"
+    sources:
+      # Disable built-in YouTube source to use our plugin
+      youtube: false
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      http: true
+      local: false
+    bufferDurationMs: 400
+    frameBufferDurationMs: 5000
+    youtubePlaylistLoadLimit: 6
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    soundcloudSearchEnabled: true
+    gc-warnings: true
+    ratelimit:
+      ipBlocks: []
+      excludedIps: []
+      strategy: "RotateOnBan"
+      searchTriggersFail: true
+      retryLimit: -1
+
+metrics:
+  prometheus:
+    enabled: true
+    endpoint: /metrics
+
+logging:
+  file:
+    path: ./logs/
+  level:
+    root: INFO
+    lavalink: DEBUG
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - WEBEMBEDDED
