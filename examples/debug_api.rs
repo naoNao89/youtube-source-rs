@@ -1,6 +1,6 @@
-use youtube_source_rs::Client;
 use youtube_source_rs::client::{NonMusicClient, WebClient};
 use youtube_source_rs::http::RequestContext;
+use youtube_source_rs::Client;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

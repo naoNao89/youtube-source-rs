@@ -1,6 +1,6 @@
 use url::Url;
 use youtube_source_rs::cipher::SignatureCipherManager;
-use youtube_source_rs::{StreamFormat, track::FormatInfo};
+use youtube_source_rs::{track::FormatInfo, StreamFormat};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

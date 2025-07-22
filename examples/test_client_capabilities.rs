@@ -1,4 +1,4 @@
-use youtube_source_rs::client::traits::{Client, generate_capabilities_summary};
+use youtube_source_rs::client::traits::{generate_capabilities_summary, Client};
 use youtube_source_rs::client::{
     AndroidClient, IosClient, MusicClient, TvClient, WebClient, WebEmbeddedClient,
 };
