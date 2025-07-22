@@ -27,11 +27,23 @@ check_docker() {
 
 # Function to check if docker-compose is available
 check_docker_compose() {
-    if ! command -v docker-compose > /dev/null 2>&1; then
-        echo -e "${RED}❌ docker-compose is not installed. Please install it and try again.${NC}"
-        exit 1
+    # Check for Docker Compose v2 first (preferred)
+    if command -v docker > /dev/null 2>&1 && docker compose version > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ Docker Compose v2 is available${NC}"
+        export DOCKER_COMPOSE_CMD="docker compose"
+        return 0
     fi
-    echo -e "${GREEN}✅ docker-compose is available${NC}"
+
+    # Fall back to Docker Compose v1
+    if command -v docker-compose > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ Docker Compose v1 is available${NC}"
+        export DOCKER_COMPOSE_CMD="docker-compose"
+        return 0
+    fi
+
+    echo -e "${RED}❌ Docker Compose is not installed. Please install it and try again.${NC}"
+    echo -e "${YELLOW}Install Docker Compose v2: https://docs.docker.com/compose/install/${NC}"
+    exit 1
 }
 
 # Function to build the Rust plugin
@@ -62,10 +74,10 @@ start_environment() {
     echo -e "${YELLOW}🐳 Starting test environment...${NC}"
     
     # Clean up any existing containers
-    docker-compose down --remove-orphans
-    
+    ${DOCKER_COMPOSE_CMD} down --remove-orphans
+
     # Start the services
-    docker-compose up -d lavalink-v4 lavalink-v3 redis prometheus grafana
+    ${DOCKER_COMPOSE_CMD} up -d lavalink-v4 lavalink-v3 redis prometheus grafana
     
     echo -e "${YELLOW}⏳ Waiting for services to be ready...${NC}"
     
@@ -99,7 +111,7 @@ run_test_bot() {
     echo -e "${YELLOW}🤖 Running integration test bot...${NC}"
     
     # Build and run the test bot
-    docker-compose up --build test-bot
+    ${DOCKER_COMPOSE_CMD} up --build test-bot
     
     echo -e "${GREEN}✅ Test bot completed${NC}"
 }
@@ -170,7 +182,7 @@ EOF
 # Function to cleanup
 cleanup() {
     echo -e "${YELLOW}🧹 Cleaning up test environment...${NC}"
-    docker-compose down --remove-orphans
+    ${DOCKER_COMPOSE_CMD} down --remove-orphans
     echo -e "${GREEN}✅ Cleanup completed${NC}"
 }
 
@@ -179,12 +191,12 @@ validate_environment() {
     echo -e "${YELLOW}🔍 Validating test environment...${NC}"
 
     # Check if Lavalink containers are running
-    if ! docker-compose ps | grep -q "lavalink-v4.*Up"; then
+    if ! ${DOCKER_COMPOSE_CMD} ps | grep -q "lavalink-v4.*Up"; then
         echo -e "${RED}❌ Lavalink v4 container is not running${NC}"
         return 1
     fi
 
-    if ! docker-compose ps | grep -q "lavalink-v3.*Up"; then
+    if ! ${DOCKER_COMPOSE_CMD} ps | grep -q "lavalink-v3.*Up"; then
         echo -e "${RED}❌ Lavalink v3 container is not running${NC}"
         return 1
     fi
@@ -232,13 +244,13 @@ show_help() {
 # Function to show logs
 show_logs() {
     echo -e "${BLUE}📋 Showing logs from all services...${NC}"
-    docker-compose logs -f
+    ${DOCKER_COMPOSE_CMD} logs -f
 }
 
 # Function to show status
 show_status() {
     echo -e "${BLUE}📊 Service Status:${NC}"
-    docker-compose ps
+    ${DOCKER_COMPOSE_CMD} ps
     
     echo -e "\n${BLUE}🔗 Service URLs:${NC}"
     echo "Lavalink v4: http://localhost:2333"

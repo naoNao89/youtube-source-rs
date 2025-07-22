@@ -1,7 +1,7 @@
 use super::{endpoints::*, responses::*};
 use crate::error::{Result, YoutubeError};
 use reqwest::Client as HttpClient;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 /// YouTube API client for making InnerTube requests
 #[derive(Debug, Clone)]

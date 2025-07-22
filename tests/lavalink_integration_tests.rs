@@ -266,8 +266,10 @@ mod lavalink_integration_tests {
             assert!(capabilities.videos || capabilities.playlists);
 
             // Test that client can handle YouTube URLs (only for clients that should)
-            if name != "MUSIC" {  // Music client has TODO implementation
-                let can_handle = client.can_handle_request("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            if name != "MUSIC" {
+                // Music client has TODO implementation
+                let can_handle =
+                    client.can_handle_request("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
                 if name == "TV_HTML5_EMBEDDED" {
                     // TV HTML5 Embedded should be able to handle video URLs
                     assert!(can_handle, "TV HTML5 Embedded should handle video URLs");

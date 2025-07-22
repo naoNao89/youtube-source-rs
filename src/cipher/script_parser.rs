@@ -48,8 +48,8 @@ impl ScriptParser {
     /// Extract timestamp from script
     pub fn extract_timestamp(script: &str) -> Result<String> {
         static TIMESTAMP_REGEX: OnceLock<Regex> = OnceLock::new();
-        let regex =
-            TIMESTAMP_REGEX.get_or_init(|| Regex::new(r"(signatureTimestamp|sts):\s*(\d+)").unwrap());
+        let regex = TIMESTAMP_REGEX
+            .get_or_init(|| Regex::new(r"(signatureTimestamp|sts):\s*(\d+)").unwrap());
 
         regex
             .captures(script)

@@ -18,8 +18,8 @@ pub mod utils;
 
 // Re-export main types
 pub use client::{
-    AndroidClient, Client, ClientCapabilities, IosClient, MusicClient, TvClient, WebClient,
-    WebEmbeddedClient, generate_capabilities_summary,
+    generate_capabilities_summary, AndroidClient, Client, ClientCapabilities, IosClient,
+    MusicClient, TvClient, WebClient, WebEmbeddedClient,
 };
 pub use config::{ClientOptions, YoutubeSourceOptions};
 pub use error::{AudioItem, Result, YoutubeError};
@@ -30,8 +30,8 @@ pub use track::{AudioTrackInfo, StreamFormat, TrackFormats, YoutubeAudioTrack};
 
 // Re-export plugin types
 pub use plugin::{
-    YoutubeConfig, YoutubePluginLoader, YoutubeOauthConfig, Pot, PluginInfo,
-    ClientProvider, ClientProviderV3, ClientProviderV4, YoutubeRestHandler,
+    ClientProvider, ClientProviderV3, ClientProviderV4, PluginInfo, Pot, YoutubeConfig,
+    YoutubeOauthConfig, YoutubePluginLoader, YoutubeRestHandler,
 };
 
 /// Main entry point for the YouTube source library
