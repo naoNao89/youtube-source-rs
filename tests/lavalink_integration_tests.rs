@@ -75,14 +75,28 @@ mod lavalink_integration_tests {
         let client = reqwest::Client::new();
         let version_url = format!("{url}/version");
 
-        for _ in 0..30 {
-            if let Ok(response) = client.get(&version_url).send().await {
-                if response.status().is_success() {
-                    return true;
+        println!("Waiting for Lavalink at {url}...");
+
+        for i in 0..60 {  // Increased from 30 to 60 iterations (2 minutes total)
+            match client.get(&version_url).send().await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        println!("✅ Lavalink at {url} is ready!");
+                        return true;
+                    } else {
+                        println!("Lavalink at {url} responded with status: {}", response.status());
+                    }
+                }
+                Err(e) => {
+                    if i % 10 == 0 {  // Log every 20 seconds
+                        println!("Waiting for Lavalink at {url}... ({}/60) - Error: {}", i + 1, e);
+                    }
                 }
             }
             tokio::time::sleep(Duration::from_secs(2)).await;
         }
+
+        println!("❌ Timeout waiting for Lavalink at {url}");
         false
     }
 
@@ -335,6 +349,16 @@ mod lavalink_integration_tests {
     #[tokio::test]
     #[ignore]
     async fn test_lavalink_stats() {
+        // Wait for both Lavalink instances to be ready
+        assert!(
+            wait_for_lavalink(LAVALINK_V4_URL).await,
+            "Lavalink v4 is not running or not accessible"
+        );
+        assert!(
+            wait_for_lavalink(LAVALINK_V3_URL).await,
+            "Lavalink v3 is not running or not accessible"
+        );
+
         let v4_client = LavalinkTestClient::new(LAVALINK_V4_URL, LAVALINK_PASSWORD);
         let v3_client = LavalinkTestClient::new(LAVALINK_V3_URL, LAVALINK_PASSWORD);
 
