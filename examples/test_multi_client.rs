@@ -66,11 +66,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test Web Client Variants
     println!("\n3. Testing Web Client Variants");
 
-    let web_standard = WebClient::new()?;
+    let _web_standard = WebClient::new()?;
     println!("   🌐 Web Standard: WEB");
     println!("      - Can handle all requests: true");
 
-    let web_mobile = WebClient::mobile()?;
+    let _web_mobile = WebClient::mobile()?;
     println!("   📱 Mobile Web: MWEB");
     println!("      - Can handle all requests: true");
 
@@ -144,14 +144,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let embedded = if client.is_embedded() { "✅" } else { "❌" };
 
         println!(
-            "| {} | {} | {} | {} | {} | {} | {} |",
-            format!("{:<15}", name),
-            oauth,
-            videos,
-            playlists,
-            mixes,
-            search,
-            embedded
+            "| {name:<15} | {oauth} | {videos} | {playlists} | {mixes} | {search} | {embedded} |"
         );
     }
 

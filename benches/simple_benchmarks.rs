@@ -25,7 +25,7 @@ fn bench_manager_with_options(c: &mut Criterion) {
 fn bench_url_parsing(c: &mut Criterion) {
     let mut group = c.benchmark_group("url_parsing");
 
-    let test_urls = vec![
+    let test_urls = [
         "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         "https://youtu.be/dQw4w9WgXcQ",
         "https://www.youtube.com/playlist?list=PLtest123",
@@ -35,7 +35,7 @@ fn bench_url_parsing(c: &mut Criterion) {
     ];
 
     for (i, url) in test_urls.iter().enumerate() {
-        group.bench_with_input(format!("url_{}", i), url, |b, url| {
+        group.bench_with_input(format!("url_{i}"), url, |b, url| {
             b.iter(|| {
                 // Simple URL validation benchmark
                 let is_youtube = url.contains("youtube.com") || url.contains("youtu.be");
@@ -51,7 +51,7 @@ fn bench_url_parsing(c: &mut Criterion) {
 fn bench_string_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("string_operations");
 
-    let test_strings = vec![
+    let test_strings = [
         "abcdefghijklmnopqrstuvwxyz",
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
         "1234567890abcdefghijklmnop",
@@ -59,14 +59,14 @@ fn bench_string_operations(c: &mut Criterion) {
     ];
 
     for (i, string) in test_strings.iter().enumerate() {
-        group.bench_with_input(format!("reverse_{}", i), string, |b, s| {
+        group.bench_with_input(format!("reverse_{i}"), string, |b, s| {
             b.iter(|| {
                 let reversed: String = s.chars().rev().collect();
                 black_box(reversed)
             })
         });
 
-        group.bench_with_input(format!("uppercase_{}", i), string, |b, s| {
+        group.bench_with_input(format!("uppercase_{i}"), string, |b, s| {
             b.iter(|| {
                 let upper = s.to_uppercase();
                 black_box(upper)
@@ -84,7 +84,7 @@ fn bench_regex_operations(c: &mut Criterion) {
     let video_id_pattern = regex::Regex::new(r"[a-zA-Z0-9_-]{11}").unwrap();
     let playlist_id_pattern = regex::Regex::new(r"PL[a-zA-Z0-9_-]{32}").unwrap();
 
-    let test_strings = vec![
+    let test_strings = [
         "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s",
         "Check out this video: dQw4w9WgXcQ",
         "Playlist: https://www.youtube.com/playlist?list=PLtest123456789012345678901234567890",
@@ -92,14 +92,14 @@ fn bench_regex_operations(c: &mut Criterion) {
     ];
 
     for (i, test_str) in test_strings.iter().enumerate() {
-        group.bench_with_input(format!("video_id_{}", i), test_str, |b, text| {
+        group.bench_with_input(format!("video_id_{i}"), test_str, |b, text| {
             b.iter(|| {
                 let matches: Vec<_> = video_id_pattern.find_iter(text).collect();
                 black_box(matches)
             })
         });
 
-        group.bench_with_input(format!("playlist_id_{}", i), test_str, |b, text| {
+        group.bench_with_input(format!("playlist_id_{i}"), test_str, |b, text| {
             b.iter(|| {
                 let matches: Vec<_> = playlist_id_pattern.find_iter(text).collect();
                 black_box(matches)

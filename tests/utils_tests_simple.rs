@@ -97,14 +97,13 @@ fn test_url_parsing() {
     ];
 
     for url in valid_urls {
-        assert!(is_youtube_url(url), "Should be valid YouTube URL: {}", url);
+        assert!(is_youtube_url(url), "Should be valid YouTube URL: {url}");
     }
 
     for url in invalid_urls {
         assert!(
             !is_youtube_url(url),
-            "Should not be valid YouTube URL: {}",
-            url
+            "Should not be valid YouTube URL: {url}"
         );
     }
 }
@@ -126,14 +125,13 @@ fn test_search_query() {
     ];
 
     for query in search_queries {
-        assert!(is_search_query(query), "Should be search query: {}", query);
+        assert!(is_search_query(query), "Should be search query: {query}");
     }
 
     for query in non_search_queries {
         assert!(
             !is_search_query(query),
-            "Should not be search query: {}",
-            query
+            "Should not be search query: {query}"
         );
     }
 }

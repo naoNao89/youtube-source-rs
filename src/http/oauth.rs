@@ -135,7 +135,7 @@ impl YoutubeOauth2Handler {
 
         enabled
             && refresh_token.as_ref().is_some_and(|t| !t.trim().is_empty())
-            && access_token.as_ref().map_or(true, |t| t.is_expired())
+            && access_token.as_ref().is_none_or(|t| t.is_expired())
     }
 
     /// Get current refresh token

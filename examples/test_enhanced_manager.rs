@@ -201,6 +201,7 @@ async fn benchmark_manager_performance(
 }
 
 // Helper function to create a realistic mock YouTube player script
+#[allow(dead_code)]
 fn create_realistic_mock_script() -> String {
     r#"
         var ytInitialPlayerResponse = {

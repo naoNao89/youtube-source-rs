@@ -85,8 +85,7 @@ fn test_url_parameter_extraction() {
                 .any(|(k, v)| k == expected_key && v == expected_value);
             assert!(
                 found,
-                "Expected parameter {}={} not found in URL: {}",
-                expected_key, expected_value, url_str
+                "Expected parameter {expected_key}={expected_value} not found in URL: {url_str}"
             );
         }
     }
@@ -124,21 +123,18 @@ fn test_signature_validation() {
     for signature in valid_signatures {
         assert!(
             !signature.trim().is_empty(),
-            "Valid signature should not be empty: {}",
-            signature
+            "Valid signature should not be empty: {signature}"
         );
         assert!(
-            signature.chars().all(|c| c.is_ascii()),
-            "Valid signature should be ASCII: {}",
-            signature
+            signature.is_ascii(),
+            "Valid signature should be ASCII: {signature}"
         );
     }
 
     for signature in invalid_signatures {
         assert!(
             signature.trim().is_empty(),
-            "Invalid signature should be empty or whitespace: {:?}",
-            signature
+            "Invalid signature should be empty or whitespace: {signature:?}"
         );
     }
 }
@@ -195,8 +191,7 @@ fn test_cipher_performance_characteristics() {
     // Should complete in reasonable time (less than 1ms for 10k chars)
     assert!(
         duration.as_millis() < 10,
-        "Cipher operation took too long: {:?}",
-        duration
+        "Cipher operation took too long: {duration:?}"
     );
 }
 

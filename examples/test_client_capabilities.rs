@@ -18,6 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     test_ios_client().await?;
     test_tv_clients().await?;
     test_web_clients().await?;
+    test_capability_validation().await?;
 
     println!("✅ All client capability tests passed!");
     Ok(())

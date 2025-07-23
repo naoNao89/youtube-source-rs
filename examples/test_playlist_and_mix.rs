@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test 3: Mix Loading
     println!("\n🎶 Test 3: Loading YouTube Mix");
     let test_mix_id = "RDdQw4w9WgXcQ"; // Mix based on Rick Astley - Never Gonna Give You Up
-    let selected_video_id = "dQw4w9WgXcQ"; // The seed video
+    let _selected_video_id = "dQw4w9WgXcQ"; // The seed video
 
     match manager
         .load_item(&format!(

@@ -21,7 +21,7 @@ fn bench_basic_cipher_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("basic_cipher");
 
     // Sample cipher operations (these would be real cipher operations in practice)
-    let test_signatures = vec![
+    let test_signatures = [
         "abcdefghijklmnopqrstuvwxyz",
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
         "1234567890abcdefghijklmnop",
@@ -81,7 +81,7 @@ fn bench_basic_cipher_operations(c: &mut Criterion) {
 fn bench_url_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("url_operations");
 
-    let test_urls = vec![
+    let test_urls = [
         "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s",
         "https://youtu.be/dQw4w9WgXcQ?t=42",
         "https://www.youtube.com/embed/dQw4w9WgXcQ",
@@ -123,7 +123,7 @@ fn bench_regex_operations(c: &mut Criterion) {
     let playlist_id_pattern = regex::Regex::new(r"PL[a-zA-Z0-9_-]{32}").unwrap();
     let timestamp_pattern = regex::Regex::new(r"[?&]t=(\d+)").unwrap();
 
-    let test_strings = vec![
+    let test_strings = [
         "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s",
         "Check out this video: dQw4w9WgXcQ",
         "Playlist: https://www.youtube.com/playlist?list=PLtest123456789012345678901234567890",

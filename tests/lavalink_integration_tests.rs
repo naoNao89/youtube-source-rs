@@ -73,7 +73,7 @@ mod lavalink_integration_tests {
 
     async fn wait_for_lavalink(url: &str) -> bool {
         let client = reqwest::Client::new();
-        let version_url = format!("{}/version", url);
+        let version_url = format!("{url}/version");
 
         for _ in 0..30 {
             if let Ok(response) = client.get(&version_url).send().await {
@@ -138,8 +138,7 @@ mod lavalink_integration_tests {
 
             assert!(
                 result.is_ok(),
-                "Request timed out for identifier: {}",
-                identifier
+                "Request timed out for identifier: {identifier}"
             );
 
             let tracks = result.unwrap().expect("Failed to load tracks");
@@ -161,7 +160,7 @@ mod lavalink_integration_tests {
                 }
             }
 
-            println!("✓ Successfully loaded: {}", identifier);
+            println!("✓ Successfully loaded: {identifier}");
         }
     }
 
@@ -175,7 +174,7 @@ mod lavalink_integration_tests {
         for query in search_queries {
             let result = timeout(Duration::from_secs(30), client.load_tracks(query)).await;
 
-            assert!(result.is_ok(), "Search timed out for query: {}", query);
+            assert!(result.is_ok(), "Search timed out for query: {query}");
 
             let tracks = result.unwrap().expect("Failed to search");
             assert_eq!(tracks["loadType"].as_str().unwrap(), "search");
@@ -191,7 +190,7 @@ mod lavalink_integration_tests {
                 }
             }
 
-            println!("✓ Search successful: {}", query);
+            println!("✓ Search successful: {query}");
         }
     }
 
@@ -234,7 +233,7 @@ mod lavalink_integration_tests {
         let manager = YoutubeAudioSourceManager::new();
 
         // Test that our manager can handle the same URLs that Lavalink expects
-        let _test_urls = vec![
+        let _test_urls = [
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             "https://youtu.be/dQw4w9WgXcQ",
             "dQw4w9WgXcQ",
@@ -277,7 +276,7 @@ mod lavalink_integration_tests {
                 // Note: Standard TV client returns false by design (migrated from Java)
             }
 
-            println!("✓ Client {} is compatible", name);
+            println!("✓ Client {name} is compatible");
         }
 
         // Test that Lavalink can load tracks (integration test)
@@ -360,7 +359,7 @@ mod lavalink_integration_tests {
             assert!(result.is_ok(), "Concurrent request failed");
         }
 
-        println!("✓ Concurrent requests completed in {:?}", duration);
+        println!("✓ Concurrent requests completed in {duration:?}");
         assert!(
             duration < Duration::from_secs(30),
             "Performance test took too long"

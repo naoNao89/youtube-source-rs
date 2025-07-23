@@ -187,7 +187,7 @@ mod mock_youtube_api_tests {
         // Test that our mock server responds correctly
         let client = reqwest::Client::new();
         let response = client
-            .post(&format!(
+            .post(format!(
                 "{}/youtubei/v1/player?key=test_key",
                 mock_server.uri()
             ))
@@ -227,7 +227,7 @@ mod mock_youtube_api_tests {
 
         let client = reqwest::Client::new();
         let response = client
-            .post(&format!(
+            .post(format!(
                 "{}/youtubei/v1/browse?key=test_key",
                 mock_server.uri()
             ))
@@ -264,7 +264,7 @@ mod mock_youtube_api_tests {
 
         let client = reqwest::Client::new();
         let response = client
-            .post(&format!(
+            .post(format!(
                 "{}/youtubei/v1/search?key=test_key",
                 mock_server.uri()
             ))
@@ -306,7 +306,7 @@ mod mock_youtube_api_tests {
 
         let client = reqwest::Client::new();
         let response = client
-            .post(&format!(
+            .post(format!(
                 "{}/youtubei/v1/player?key=invalid_key",
                 mock_server.uri()
             ))
@@ -341,7 +341,7 @@ mod mock_youtube_api_tests {
 
         let client = reqwest::Client::new();
         let response = client
-            .post(&format!(
+            .post(format!(
                 "{}/youtubei/v1/player?key=rate_limited",
                 mock_server.uri()
             ))

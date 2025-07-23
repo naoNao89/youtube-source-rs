@@ -1,0 +1,277 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [published]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Generate and deploy documentation
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-docs-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-cargo-
+
+      - name: Generate documentation
+        run: |
+          cargo doc --no-deps --document-private-items --all-features
+        env:
+          RUSTDOCFLAGS: "--enable-index-page -Zunstable-options"
+
+      - name: Create documentation index
+        run: |
+          cat > target/doc/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="utf-8">
+              <title>YouTube Source Rust Documentation</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      max-width: 800px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                      line-height: 1.6;
+                      color: #333;
+                  }
+                  .header {
+                      text-align: center;
+                      margin-bottom: 3rem;
+                      padding-bottom: 2rem;
+                      border-bottom: 2px solid #eee;
+                  }
+                  .logo {
+                      font-size: 2.5rem;
+                      font-weight: bold;
+                      color: #d73a49;
+                      margin-bottom: 0.5rem;
+                  }
+                  .subtitle {
+                      font-size: 1.2rem;
+                      color: #666;
+                      margin-bottom: 1rem;
+                  }
+                  .badges {
+                      margin: 1rem 0;
+                  }
+                  .badges img {
+                      margin: 0 0.25rem;
+                  }
+                  .section {
+                      margin: 2rem 0;
+                  }
+                  .section h2 {
+                      color: #d73a49;
+                      border-bottom: 1px solid #eee;
+                      padding-bottom: 0.5rem;
+                  }
+                  .links {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                      gap: 1rem;
+                      margin: 2rem 0;
+                  }
+                  .link-card {
+                      border: 1px solid #ddd;
+                      border-radius: 8px;
+                      padding: 1.5rem;
+                      text-decoration: none;
+                      color: inherit;
+                      transition: all 0.2s ease;
+                  }
+                  .link-card:hover {
+                      border-color: #d73a49;
+                      box-shadow: 0 4px 12px rgba(215, 58, 73, 0.1);
+                      transform: translateY(-2px);
+                  }
+                  .link-card h3 {
+                      margin: 0 0 0.5rem 0;
+                      color: #d73a49;
+                  }
+                  .link-card p {
+                      margin: 0;
+                      color: #666;
+                      font-size: 0.9rem;
+                  }
+                  .footer {
+                      text-align: center;
+                      margin-top: 3rem;
+                      padding-top: 2rem;
+                      border-top: 1px solid #eee;
+                      color: #666;
+                      font-size: 0.9rem;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <div class="logo">🎵 YouTube Source Rust</div>
+                  <div class="subtitle">High-performance YouTube source manager for Lavalink</div>
+                  <div class="badges">
+                      <img src="https://github.com/lavalink-devs/youtube-source-rs/workflows/CI/badge.svg" alt="CI">
+                      <img src="https://codecov.io/gh/lavalink-devs/youtube-source-rs/branch/main/graph/badge.svg" alt="Coverage">
+                      <img src="https://img.shields.io/crates/v/youtube-source-rs.svg" alt="Crates.io">
+                      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+                  </div>
+              </div>
+
+              <div class="section">
+                  <h2>📚 Documentation</h2>
+                  <div class="links">
+                      <a href="youtube_source_rs/index.html" class="link-card">
+                          <h3>📖 API Documentation</h3>
+                          <p>Complete API reference with examples and usage guides</p>
+                      </a>
+                      <a href="https://github.com/lavalink-devs/youtube-source-rs" class="link-card">
+                          <h3>📦 Source Code</h3>
+                          <p>View the source code, contribute, and report issues</p>
+                      </a>
+                      <a href="https://github.com/lavalink-devs/youtube-source-rs/blob/main/CONTRIBUTING.md" class="link-card">
+                          <h3>🤝 Contributing</h3>
+                          <p>Development guidelines and contribution process</p>
+                      </a>
+                      <a href="https://crates.io/crates/youtube-source-rs" class="link-card">
+                          <h3>📦 Crates.io</h3>
+                          <p>Download and install from the Rust package registry</p>
+                      </a>
+                  </div>
+              </div>
+
+              <div class="section">
+                  <h2>🚀 Quick Start</h2>
+                  <p>Add to your <code>Cargo.toml</code>:</p>
+                  <pre><code>[dependencies]
+          youtube-source-rs = "0.1.0"</code></pre>
+                  
+                  <p>Basic usage:</p>
+                  <pre><code>use youtube_source_rs::YoutubeAudioSourceManager;
+
+          #[tokio::main]
+          async fn main() -> Result<(), Box<dyn std::error::Error>> {
+              let youtube = YoutubeAudioSourceManager::new();
+              let audio_item = youtube.load_item("https://www.youtube.com/watch?v=dQw4w9WgXcQ").await?;
+              Ok(())
+          }</code></pre>
+              </div>
+
+              <div class="footer">
+                  <p>Generated on $(date) | <a href="https://github.com/lavalink-devs/youtube-source-rs">YouTube Source Rust</a></p>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/configure-pages@v4
+
+      - name: Upload documentation artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Check documentation builds on PRs
+  docs-check:
+    name: Check Documentation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-docs-check-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-check-cargo-
+
+      - name: Check documentation builds
+        run: cargo doc --no-deps --document-private-items --all-features
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+      - name: Check for broken links
+        run: |
+          # Install markdown link checker
+          npm install -g markdown-link-check
+          
+          # Check README links
+          markdown-link-check README.md --config .github/markdown-link-check.json || true
+          
+          # Check CONTRIBUTING links
+          markdown-link-check CONTRIBUTING.md --config .github/markdown-link-check.json || true
+
+  # Generate changelog for releases
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        run: |
+          # Install git-cliff for changelog generation
+          curl -L https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-0.10.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          chmod +x git-cliff
+          
+          # Generate changelog
+          ./git-cliff --output CHANGELOG.md
+          
+          # Commit if there are changes
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changelog changes"
+          else
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add CHANGELOG.md
+            git commit -m "Update changelog for ${{ github.event.release.tag_name }}"
+            git push
+          fi

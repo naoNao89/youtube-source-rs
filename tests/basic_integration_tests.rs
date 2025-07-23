@@ -75,8 +75,7 @@ fn test_url_validation() {
     for url in valid_urls {
         assert!(
             client.can_handle_request(url),
-            "Should handle valid URL: {}",
-            url
+            "Should handle valid URL: {url}"
         );
     }
 
@@ -95,8 +94,7 @@ fn test_url_validation() {
     for url in invalid_urls {
         assert!(
             !web_client.can_handle_request(url),
-            "Should not handle invalid URL: {}",
-            url
+            "Should not handle invalid URL: {url}"
         );
     }
 }
@@ -108,7 +106,7 @@ fn test_manager_client_selection() {
 
     // Manager should have multiple clients available
     assert!(
-        manager.clients.len() > 0,
+        !manager.clients.is_empty(),
         "Manager should have at least one client"
     );
 
