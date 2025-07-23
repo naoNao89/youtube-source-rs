@@ -187,17 +187,46 @@ jobs:
         run: |
           echo "Waiting for Lavalink services to be ready..."
 
-          # Wait for Docker containers to be healthy first
-          echo "Waiting for Docker health checks..."
-          timeout 300 bash -c 'until docker ps --filter "name=lavalink-v4-test" --filter "health=healthy" --format "{{.Names}}" | grep -q lavalink-v4-test; do echo "Waiting for Lavalink v4 health check..."; sleep 5; done'
-          timeout 300 bash -c 'until docker ps --filter "name=lavalink-v3-test" --filter "health=healthy" --format "{{.Names}}" | grep -q lavalink-v3-test; do echo "Waiting for Lavalink v3 health check..."; sleep 5; done'
+          # Check if containers are running first
+          echo "Checking container status..."
+          docker ps --filter "name=lavalink" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-          # Additional verification with API endpoints
-          echo "Verifying API endpoints..."
-          timeout 180 bash -c 'until curl -s -f http://localhost:2333/version > /dev/null; do echo "Waiting for Lavalink v4 API..."; sleep 3; done'
-          timeout 180 bash -c 'until curl -s -f http://localhost:2334/version > /dev/null; do echo "Waiting for Lavalink v3 API..."; sleep 3; done'
+          # Wait for containers to be running and healthy
+          echo "Waiting for Lavalink v4 to be ready..."
+          for i in {1..60}; do
+            if docker ps --filter "name=lavalink-v4-test" --filter "status=running" --format "{{.Names}}" | grep -q lavalink-v4-test; then
+              if curl -s http://localhost:2333/version > /dev/null 2>&1; then
+                echo "✅ Lavalink v4 is ready!"
+                break
+              fi
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ Timeout waiting for Lavalink v4"
+              docker logs lavalink-v4-test --tail 50
+              exit 1
+            fi
+            echo "Waiting for Lavalink v4... ($i/60)"
+            sleep 3
+          done
 
-          echo "Services are ready!"
+          echo "Waiting for Lavalink v3 to be ready..."
+          for i in {1..60}; do
+            if docker ps --filter "name=lavalink-v3-test" --filter "status=running" --format "{{.Names}}" | grep -q lavalink-v3-test; then
+              if curl -s http://localhost:2334/version > /dev/null 2>&1; then
+                echo "✅ Lavalink v3 is ready!"
+                break
+              fi
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ Timeout waiting for Lavalink v3"
+              docker logs lavalink-v3-test --tail 50
+              exit 1
+            fi
+            echo "Waiting for Lavalink v3... ($i/60)"
+            sleep 3
+          done
+
+          echo "🎉 All services are ready!"
 
       - name: Run integration tests
         run: |
