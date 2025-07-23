@@ -186,8 +186,17 @@ jobs:
       - name: Wait for services to be ready
         run: |
           echo "Waiting for Lavalink services to be ready..."
-          timeout 120 bash -c 'until curl -s http://localhost:2333/version > /dev/null; do sleep 2; done'
-          timeout 120 bash -c 'until curl -s http://localhost:2334/version > /dev/null; do sleep 2; done'
+
+          # Wait for Docker containers to be healthy first
+          echo "Waiting for Docker health checks..."
+          timeout 300 bash -c 'until docker ps --filter "name=lavalink-v4-test" --filter "health=healthy" --format "{{.Names}}" | grep -q lavalink-v4-test; do echo "Waiting for Lavalink v4 health check..."; sleep 5; done'
+          timeout 300 bash -c 'until docker ps --filter "name=lavalink-v3-test" --filter "health=healthy" --format "{{.Names}}" | grep -q lavalink-v3-test; do echo "Waiting for Lavalink v3 health check..."; sleep 5; done'
+
+          # Additional verification with API endpoints
+          echo "Verifying API endpoints..."
+          timeout 180 bash -c 'until curl -s -f http://localhost:2333/version > /dev/null; do echo "Waiting for Lavalink v4 API..."; sleep 3; done'
+          timeout 180 bash -c 'until curl -s -f http://localhost:2334/version > /dev/null; do echo "Waiting for Lavalink v3 API..."; sleep 3; done'
+
           echo "Services are ready!"
 
       - name: Run integration tests
@@ -213,7 +222,11 @@ jobs:
         if: always()
         run: |
           cd test-infrastructure
-          ./run-tests.sh stop
+          # Stop services gracefully
+          ./run-tests.sh stop || true
+          # Force cleanup if needed
+          docker-compose down --remove-orphans --volumes || true
+          docker system prune -f || true
 
   # Performance benchmarks
   benchmark:
@@ -288,6 +301,7 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            target/${{ matrix.target }}/release/youtube-source-rs*
+            target/${{ matrix.target }}/release/libyoutube_source_rs.*
+            target/${{ matrix.target }}/release/youtube_source_rs.dll
             !target/${{ matrix.target }}/release/*.d
             !target/${{ matrix.target }}/release/deps/

@@ -42,12 +42,15 @@ jobs:
 
       - name: Generate documentation
         run: |
+          # Generate documentation with stable flags
           cargo doc --no-deps --document-private-items --all-features
         env:
-          RUSTDOCFLAGS: "--enable-index-page -Zunstable-options"
+          RUSTDOCFLAGS: "-D warnings"
 
       - name: Create documentation index
         run: |
+          # Ensure target/doc directory exists
+          mkdir -p target/doc
           cat > target/doc/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
@@ -261,17 +264,17 @@ jobs:
           # Install git-cliff for changelog generation
           curl -L https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-0.10.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
           chmod +x git-cliff
-          
+
           # Generate changelog
-          ./git-cliff --output CHANGELOG.md
-          
+          ./git-cliff --output CHANGELOG.md || echo "Changelog generation failed, continuing..."
+
           # Commit if there are changes
-          if git diff --quiet CHANGELOG.md; then
-            echo "No changelog changes"
-          else
+          if [ -f CHANGELOG.md ] && ! git diff --quiet CHANGELOG.md; then
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
             git add CHANGELOG.md
             git commit -m "Update changelog for ${{ github.event.release.tag_name }}"
             git push
+          else
+            echo "No changelog changes or file not generated"
           fi

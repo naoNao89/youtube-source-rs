@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Lavalink v4 (Latest)
   lavalink-v4:
@@ -20,10 +18,10 @@ services:
       - lavalink-test
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2333/version"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   # Lavalink v3 (Legacy support)
   lavalink-v3:
@@ -44,10 +42,10 @@ services:
       - lavalink-test
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2334/version"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   # Redis for session management (optional)
   redis:

@@ -83,24 +83,34 @@ start_environment() {
     
     # Wait for Lavalink v4
     echo -n "Waiting for Lavalink v4..."
-    for i in {1..30}; do
-        if curl -s http://localhost:2333/version > /dev/null 2>&1; then
+    for i in {1..60}; do
+        if curl -s -f http://localhost:2333/version > /dev/null 2>&1; then
             echo -e " ${GREEN}✅${NC}"
             break
         fi
+        if [ $i -eq 60 ]; then
+            echo -e " ${RED}❌ Timeout waiting for Lavalink v4${NC}"
+            ${DOCKER_COMPOSE_CMD} logs lavalink-v4
+            exit 1
+        fi
         echo -n "."
-        sleep 2
+        sleep 3
     done
-    
+
     # Wait for Lavalink v3
     echo -n "Waiting for Lavalink v3..."
-    for i in {1..30}; do
-        if curl -s http://localhost:2334/version > /dev/null 2>&1; then
+    for i in {1..60}; do
+        if curl -s -f http://localhost:2334/version > /dev/null 2>&1; then
             echo -e " ${GREEN}✅${NC}"
             break
         fi
+        if [ $i -eq 60 ]; then
+            echo -e " ${RED}❌ Timeout waiting for Lavalink v3${NC}"
+            ${DOCKER_COMPOSE_CMD} logs lavalink-v3
+            exit 1
+        fi
         echo -n "."
-        sleep 2
+        sleep 3
     done
     
     echo -e "${GREEN}✅ Test environment is ready${NC}"
