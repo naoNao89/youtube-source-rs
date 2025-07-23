@@ -9,15 +9,16 @@ spring:
     active: "default"
 
 lavalink:
-  plugins:
-    # YouTube source plugin (our Rust implementation)
-    - dependency: "dev.lavalink.youtube:youtube-source-rust:latest"
-      snapshot: true
+  plugins: []
+    # Note: YouTube source plugin disabled for testing
+    # The Rust implementation is not yet published to Maven
+    # - dependency: "dev.lavalink.youtube:youtube-source-rust:latest"
+    #   snapshot: true
   server:
     password: "youshallnotpass"
     sources:
-      # Disable built-in YouTube source to use our plugin
-      youtube: false
+      # Enable built-in YouTube source for testing (plugin disabled)
+      youtube: true
       bandcamp: true
       soundcloud: true
       twitch: true
