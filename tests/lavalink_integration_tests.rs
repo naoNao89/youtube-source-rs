@@ -255,7 +255,10 @@ mod lavalink_integration_tests {
             return;
         }
 
-        assert_eq!(load_type, "playlist", "Expected 'playlist', got: {load_type}");
+        assert_eq!(
+            load_type, "playlist",
+            "Expected 'playlist', got: {load_type}"
+        );
 
         if let Some(data) = tracks["data"].as_object() {
             if let Some(tracks_array) = data["tracks"].as_array() {
