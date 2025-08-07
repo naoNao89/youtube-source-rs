@@ -45,7 +45,12 @@ mod lavalink_integration_tests {
 
         async fn get_version(&self) -> Result<Value, Box<dyn std::error::Error>> {
             let url = format!("{}/version", self.base_url);
-            let response = self.client.get(&url).send().await?;
+            let response = self
+                .client
+                .get(&url)
+                .header("Authorization", &self.password)
+                .send()
+                .await?;
 
             if response.status().is_success() {
                 Ok(response.json().await?)
@@ -77,19 +82,33 @@ mod lavalink_integration_tests {
 
         println!("Waiting for Lavalink at {url}...");
 
-        for i in 0..60 {  // Increased from 30 to 60 iterations (2 minutes total)
-            match client.get(&version_url).send().await {
+        for i in 0..60 {
+            // Increased from 30 to 60 iterations (2 minutes total)
+            match client
+                .get(&version_url)
+                .header("Authorization", LAVALINK_PASSWORD)
+                .send()
+                .await
+            {
                 Ok(response) => {
                     if response.status().is_success() {
                         println!("✅ Lavalink at {url} is ready!");
                         return true;
                     } else {
-                        println!("Lavalink at {url} responded with status: {}", response.status());
+                        println!(
+                            "Lavalink at {url} responded with status: {}",
+                            response.status()
+                        );
                     }
                 }
                 Err(e) => {
-                    if i % 10 == 0 {  // Log every 20 seconds
-                        println!("Waiting for Lavalink at {url}... ({}/60) - Error: {}", i + 1, e);
+                    if i % 10 == 0 {
+                        // Log every 20 seconds
+                        println!(
+                            "Waiting for Lavalink at {url}... ({}/60) - Error: {}",
+                            i + 1,
+                            e
+                        );
                     }
                 }
             }
