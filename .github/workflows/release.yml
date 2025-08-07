@@ -1,0 +1,356 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Create GitHub release with artifacts
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-release-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-release-cargo-
+
+      - name: Build release
+        run: cargo build --release --all-features
+
+      - name: Run tests
+        run: cargo test --release --all-features
+
+      - name: Package library
+        run: |
+          mkdir -p release-artifacts
+          tar -czf release-artifacts/youtube-source-rs-library-${{ github.ref_name }}.tar.gz \
+            -C target/release \
+            --exclude='*.d' \
+            --exclude='deps/' \
+            .
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract changelog for this version
+            awk '/^## \[/{if(p) exit; if($0 ~ /\[${{ github.ref_name }}\]/) p=1} p' CHANGELOG.md > release-notes.md
+          else
+            echo "Release ${{ github.ref_name }}" > release-notes.md
+            echo "" >> release-notes.md
+            echo "See commit history for changes." >> release-notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'release-artifacts/*'
+          bodyFile: 'release-notes.md'
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish to crates.io
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')
+    needs: release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-publish-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-publish-cargo-
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # Build and upload cross-platform binaries
+  build-binaries:
+    name: Build Cross-Platform Binaries
+    runs-on: ${{ matrix.os }}
+    if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: youtube-source-rs-linux-x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact_name: youtube-source-rs-linux-musl-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: youtube-source-rs-windows-x86_64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: youtube-source-rs-macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: youtube-source-rs-macos-aarch64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install musl tools (Linux musl only)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-release-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-release-cargo-
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }} --all-features
+
+      - name: Package binary
+        shell: bash
+        run: |
+          mkdir -p release-binaries
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp target/${{ matrix.target }}/release/youtube-source-rs.exe release-binaries/${{ matrix.artifact_name }}
+          else
+            cp target/${{ matrix.target }}/release/youtube-source-rs release-binaries/${{ matrix.artifact_name }}
+          fi
+
+      - name: Upload binary to release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'release-binaries/*'
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build plugin JAR for Lavalink
+  build-plugin:
+    name: Build Lavalink Plugin
+    runs-on: ${{ matrix.os }}
+    if: startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            lib_name: libyoutube_source_rs.so
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            lib_name: youtube_source_rs.dll
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            lib_name: libyoutube_source_rs.dylib
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            lib_name: libyoutube_source_rs.dylib
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-plugin-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-plugin-cargo-
+
+      - name: Build Rust library
+        run: cargo build --release --target ${{ matrix.target }} --all-features
+
+      - name: Create plugin JAR structure
+        shell: bash
+        run: |
+          mkdir -p plugin-build/META-INF
+          mkdir -p plugin-build/lib/${{ matrix.target }}
+
+          # Copy native library with target-specific path
+          cp target/${{ matrix.target }}/release/${{ matrix.lib_name }} plugin-build/lib/${{ matrix.target }}/
+
+          # Create plugin manifest
+          cat > plugin-build/META-INF/MANIFEST.MF << EOF
+          Manifest-Version: 1.0
+          Plugin-Class: dev.lavalink.youtube.YoutubeAudioSourceManager
+          Plugin-Id: youtube-source-rust
+          Plugin-Version: ${{ github.ref_name }}
+          Plugin-Provider: lavalink-devs
+          Plugin-Target: ${{ matrix.target }}
+          Plugin-Description: High-performance Rust YouTube source for Lavalink
+          Plugin-License: MIT
+          Plugin-Repository: https://github.com/lavalink-devs/youtube-source-rs
+          EOF
+
+      - name: Create plugin configuration
+        run: |
+          cat > plugin-build/plugin.yml << EOF
+          name: youtube-source-rust
+          version: ${{ github.ref_name }}
+          author: lavalink-devs
+          description: High-performance Rust YouTube source for Lavalink
+          main: dev.lavalink.youtube.YoutubeAudioSourceManager
+          target: ${{ matrix.target }}
+          dependencies:
+            lavalink: ">=3.7.0"
+          permissions:
+            - network.access
+            - file.read
+          configuration:
+            enabled: true
+            allowSearch: true
+            allowDirectVideoIds: true
+            allowDirectPlaylistIds: true
+            clients:
+              - MUSIC
+              - ANDROID_VR
+              - WEB
+              - WEBEMBEDDED
+          EOF
+
+      - name: Package plugin JAR
+        run: |
+          cd plugin-build
+          jar -cfm ../youtube-source-rust-plugin-${{ matrix.target }}-${{ github.ref_name }}.jar META-INF/MANIFEST.MF .
+
+      - name: Upload plugin to release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'youtube-source-rust-plugin-*.jar'
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Create universal plugin JAR with all platforms
+  build-universal-plugin:
+    name: Build Universal Plugin JAR
+    runs-on: ubuntu-latest
+    needs: build-plugin
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download all plugin artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: youtube-source-rust-plugin-*
+          merge-multiple: true
+
+      - name: Create universal plugin structure
+        run: |
+          mkdir -p universal-plugin/META-INF
+          mkdir -p universal-plugin/lib
+
+          # Extract all platform-specific libraries
+          for jar in youtube-source-rust-plugin-*-${{ github.ref_name }}.jar; do
+            if [ -f "$jar" ]; then
+              target=$(echo "$jar" | sed 's/youtube-source-rust-plugin-\(.*\)-${{ github.ref_name }}.jar/\1/')
+              mkdir -p "temp-$target"
+              cd "temp-$target"
+              jar -xf "../$jar"
+              if [ -d "lib" ]; then
+                cp -r lib/* ../universal-plugin/lib/
+              fi
+              cd ..
+              rm -rf "temp-$target"
+            fi
+          done
+
+          # Create universal manifest
+          cat > universal-plugin/META-INF/MANIFEST.MF << EOF
+          Manifest-Version: 1.0
+          Plugin-Class: dev.lavalink.youtube.YoutubeAudioSourceManager
+          Plugin-Id: youtube-source-rust
+          Plugin-Version: ${{ github.ref_name }}
+          Plugin-Provider: lavalink-devs
+          Plugin-Target: universal
+          Plugin-Description: High-performance Rust YouTube source for Lavalink (Universal)
+          Plugin-License: MIT
+          Plugin-Repository: https://github.com/lavalink-devs/youtube-source-rs
+          Supported-Platforms: x86_64-unknown-linux-gnu,x86_64-pc-windows-msvc,x86_64-apple-darwin,aarch64-apple-darwin
+          EOF
+
+      - name: Package universal plugin JAR
+        run: |
+          cd universal-plugin
+          jar -cfm ../youtube-source-rust-plugin-universal-${{ github.ref_name }}.jar META-INF/MANIFEST.MF .
+
+      - name: Upload universal plugin to release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'youtube-source-rust-plugin-universal-*.jar'
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          token: ${{ secrets.GITHUB_TOKEN }}

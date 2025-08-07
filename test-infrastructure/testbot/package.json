@@ -1,0 +1,23 @@
+{
+  "name": "lavalink-youtube-rust-test-bot",
+  "version": "1.0.0",
+  "description": "Test bot for YouTube Rust plugin integration with Lavalink",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test-runner.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "axios": "^1.6.2",
+    "express": "^4.18.2"
+  },
+  "keywords": [
+    "lavalink",
+    "youtube",
+    "rust",
+    "testing"
+  ],
+  "author": "Lavalink Developers",
+  "license": "MIT"
+}

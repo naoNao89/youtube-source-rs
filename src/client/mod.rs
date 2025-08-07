@@ -14,6 +14,6 @@ pub use config::ClientConfig;
 pub use embedded::WebEmbeddedClient;
 pub use ios::IosClient;
 pub use music::MusicClient;
-pub use traits::{Client, ClientCapabilities, generate_capabilities_summary};
+pub use traits::{generate_capabilities_summary, Client, ClientCapabilities};
 pub use tv::{TvClient, TvVariant};
 pub use web::{WebClient, WebVariant};

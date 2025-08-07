@@ -1,5 +1,5 @@
 use youtube_source_rs::{
-    AudioItem, YoutubeAudioSourceManager, YoutubeSourceOptions, utils::UrlTools,
+    utils::UrlTools, AudioItem, YoutubeAudioSourceManager, YoutubeSourceOptions,
 };
 
 #[tokio::main]
