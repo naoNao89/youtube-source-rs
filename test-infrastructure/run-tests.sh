@@ -133,7 +133,7 @@ run_rust_tests() {
     cd ..
     
     # Run integration tests with the integration-tests feature
-    cargo test --features integration-tests lavalink_integration_tests -- --ignored --test-threads=1
+    cargo test --features integration-tests lavalink_tests -- --ignored --test-threads=1
     
     cd test-infrastructure
     

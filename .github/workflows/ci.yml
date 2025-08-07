@@ -230,7 +230,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          cargo test --features integration-tests lavalink_integration_tests -- --ignored --test-threads=1
+          cargo test --features integration-tests lavalink_tests -- --ignored --test-threads=1
         env:
           RUST_BACKTRACE: 1
 

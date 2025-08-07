@@ -1,5 +1,5 @@
 #[cfg(feature = "integration-tests")]
-mod lavalink_integration_tests {
+mod lavalink_tests {
     use serde_json::Value;
     use std::time::Duration;
     use tokio::time::timeout;
@@ -53,26 +53,51 @@ mod lavalink_integration_tests {
                 .await?;
 
             if response.status().is_success() {
-                Ok(response.json().await?)
+                let text = response.text().await?;
+                // Try to parse as JSON first, if that fails, create a JSON object with the text
+                match serde_json::from_str::<Value>(&text) {
+                    Ok(json) => Ok(json),
+                    Err(_) => {
+                        // If it's not JSON, wrap the text response in a JSON object
+                        Ok(serde_json::json!({
+                            "version": text.trim(),
+                            "raw_response": text
+                        }))
+                    }
+                }
             } else {
                 Err(format!("HTTP {}: {}", response.status(), response.text().await?).into())
             }
         }
 
         async fn get_stats(&self) -> Result<Value, Box<dyn std::error::Error>> {
-            let url = format!("{}/v4/stats", self.base_url);
+            // Try v4 endpoint first, then fall back to v3 endpoint
+            let v4_url = format!("{}/v4/stats", self.base_url);
             let response = self
                 .client
-                .get(&url)
+                .get(&v4_url)
                 .header("Authorization", &self.password)
                 .send()
                 .await?;
 
             if response.status().is_success() {
-                Ok(response.json().await?)
-            } else {
-                Err(format!("HTTP {}: {}", response.status(), response.text().await?).into())
+                return Ok(response.json().await?);
+            } else if response.status() == 404 {
+                // Try v3 endpoint
+                let v3_url = format!("{}/stats", self.base_url);
+                let response = self
+                    .client
+                    .get(&v3_url)
+                    .header("Authorization", &self.password)
+                    .send()
+                    .await?;
+
+                if response.status().is_success() {
+                    return Ok(response.json().await?);
+                }
             }
+
+            Err(format!("HTTP {}: {}", response.status(), response.text().await?).into())
         }
     }
 

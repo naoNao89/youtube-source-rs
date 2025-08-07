@@ -136,7 +136,7 @@ Triggered on:
 - Rate limiting simulation
 - **Requires**: `mock-testing` feature
 
-#### Lavalink Integration Tests (`tests/lavalink_integration_tests.rs`)
+#### Lavalink Integration Tests (`tests/lavalink_tests.rs`)
 - Real Lavalink instance testing
 - Plugin compatibility
 - Performance validation
