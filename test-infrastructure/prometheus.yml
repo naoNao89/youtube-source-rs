@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'lavalink-v4'
+    static_configs:
+      - targets: ['lavalink-v4:2333']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'lavalink-v3'
+    static_configs:
+      - targets: ['lavalink-v3:2334']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'test-bot'
+    static_configs:
+      - targets: ['test-bot:3001']
+    metrics_path: '/health'
+    scrape_interval: 60s

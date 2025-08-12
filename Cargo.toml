@@ -1,7 +1,18 @@
 [package]
 name = "youtube-source-rs"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+authors = ["Lavalink Developers"]
+description = "A high-performance Rust implementation of the YouTube source manager for Lavalink"
+repository = "https://github.com/lavalink-devs/youtube-source-rs"
+license = "MIT"
+keywords = ["youtube", "lavalink", "audio", "streaming", "music"]
+categories = ["multimedia::audio", "api-bindings", "web-programming"]
+rust-version = "1.82.0"
+
+[lib]
+name = "youtube_source_rs"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 async-trait = "0.1.88"
@@ -18,3 +29,33 @@ uuid = { version = "1.17", features = ["v4"] }
 cookie_store = "0.21"
 urlencoding = "2.1"
 rquickjs = "0.9"
+# Optional dependencies for testing features
+tokio-test = { version = "0.4", optional = true }
+wiremock = { version = "0.6", optional = true }
+futures = { version = "0.3", optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = "3.8"
+pretty_assertions = "1.4"
+rstest = "0.18"
+
+[[bench]]
+name = "client_performance"
+harness = false
+
+[[bench]]
+name = "cipher_performance"
+harness = false
+
+[features]
+default = ["all-clients"]
+all-clients = ["android", "ios", "web", "tv", "music"]
+android = []
+ios = []
+web = []
+tv = []
+music = []
+oauth = []
+mock-testing = ["dep:wiremock"]
+integration-tests = ["dep:tokio-test", "dep:futures"]

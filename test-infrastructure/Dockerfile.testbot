@@ -1,0 +1,28 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies for testing
+RUN apk add --no-cache curl wget jq
+
+# Copy package files
+COPY testbot/package*.json ./
+
+# Install Node.js dependencies
+RUN npm ci --only=production
+
+# Copy test bot source
+COPY testbot/ ./
+
+# Create test results directory
+RUN mkdir -p test-results
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+# Expose port for health checks
+EXPOSE 3001
+
+# Run tests
+CMD ["npm", "start"]

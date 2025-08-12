@@ -1,29 +1,50 @@
-# youtube-source-rust
+# YouTube Source Rust
+
+[![CI](https://github.com/lavalink-devs/youtube-source-rs/workflows/CI/badge.svg)](https://github.com/lavalink-devs/youtube-source-rs/actions)
+[![codecov](https://codecov.io/gh/lavalink-devs/youtube-source-rs/branch/main/graph/badge.svg)](https://codecov.io/gh/lavalink-devs/youtube-source-rs)
+[![Crates.io](https://img.shields.io/crates/v/youtube-source-rs.svg)](https://crates.io/crates/youtube-source-rs)
+[![Documentation](https://docs.rs/youtube-source-rs/badge.svg)](https://docs.rs/youtube-source-rs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A high-performance Rust rewrite of the YouTube source manager for Lavalink.
 
 This source aims to provide robustness by leveraging multiple InnerTube clients
 for requests. Where one client fails, another will try to load the request.
 Which clients are used is entirely configurable.
 
+## 🚀 Features
+
+- **High Performance**: Built with Rust for maximum performance and memory safety
+- **Multiple Client Support**: Leverages various YouTube InnerTube clients for reliability
+- **Comprehensive Testing**: >90% code coverage with extensive integration tests
+- **CI/CD Pipeline**: Automated testing, building, and deployment
+- **Cross-Platform**: Supports Linux, macOS, and Windows
+- **Lavalink Integration**: Drop-in replacement for the Java YouTube source
+- **OAuth Support**: Authenticate with YouTube for enhanced reliability
+- **poToken Support**: Use Proof of Origin tokens to bypass bot detection
+
 ## Table of Contents
-- [Library](#library)
+- [🚀 Features](#-features)
+- [📦 Library](#library)
   - Information about the Rust library and usage.
-- [Plugin](#plugin)
+- [🔌 Plugin](#plugin)
   - Information about the Lavalink plugin and usage.
-- [Available Clients](#available-clients)
+- [🛠️ Development](#️-development)
+  - Development setup and testing information.
+- [📊 Available Clients](#available-clients)
   - Information about the clients provided by `youtube-source-rust`, as well as their advantages/disadvantages.
-- [Using OAuth tokens](#using-oauth-tokens)
+- [🔐 Using OAuth tokens](#using-oauth-tokens)
   - Information on using OAuth tokens with `youtube-source-rust`.
-- [Using a poToken](#using-a-potoken)
+- [🎫 Using a poToken](#using-a-potoken)
   - Information on using a `poToken` with `youtube-source-rust`.
-- [REST Routes (`plugin` only)](#rest-routes-plugin-only)
+- [🌐 REST Routes (`plugin` only)](#rest-routes-plugin-only)
   - Information on the REST routes provided by the `youtube-source-rust` plugin.
-- [Migration Information](#migration-from-java-implementation)
+- [📈 Migration Information](#migration-from-java-implementation)
   - Information on migrating from the Java `youtube-source` implementation.
-- [Additional Support](#additional-support)
+- [💬 Additional Support](#additional-support)
   - For everything else.
 
-## library
+## 📦 Library
 This module provides the base source manager, which can be used with any
 Rust audio streaming application or as a standalone YouTube audio extraction library.
 
@@ -84,7 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## plugin
+## 🔌 Plugin
 This module serves as the plugin for use with [Lavalink](https://github.com/lavalink-devs/Lavalink).
 
 To use this plugin with Lavalink, you must declare the dependency.
@@ -145,6 +166,111 @@ plugins:
       - WEBEMBEDDED
 ```
 
+## 🛠️ Development
+
+### Prerequisites
+
+- Rust 1.70.0 or later
+- Docker and Docker Compose (for integration testing)
+- Node.js 18+ (for test bot)
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/lavalink-devs/youtube-source-rs.git
+cd youtube-source-rs
+
+# Build the project
+cargo build
+
+# Run tests
+cargo test
+
+# Run benchmarks
+cargo bench
+```
+
+### Testing
+
+We provide comprehensive testing infrastructure:
+
+#### Unit and Integration Tests
+```bash
+# Run all tests
+cargo test --all-features
+
+# Run specific test categories
+cargo test unit_tests
+cargo test integration_tests
+cargo test cipher_tests
+cargo test utils_tests
+
+# Run with mock testing
+cargo test --features mock-testing
+```
+
+#### Lavalink Integration Testing
+
+We provide a complete Docker-based testing environment:
+
+```bash
+cd test-infrastructure
+
+# Start test environment
+./run-tests.sh start
+
+# Run all integration tests
+./run-tests.sh test
+
+# Check service status
+./run-tests.sh status
+
+# View logs
+./run-tests.sh logs
+
+# Stop environment
+./run-tests.sh stop
+```
+
+**Test Environment Includes:**
+- Lavalink v4 (port 2333)
+- Lavalink v3 (port 2334)
+- Redis (port 6379)
+- Prometheus (port 9090)
+- Grafana (port 3000)
+- Automated test bot
+
+#### Performance Benchmarks
+
+```bash
+# Run performance benchmarks
+cargo bench
+
+# View benchmark results
+open target/criterion/report/index.html
+```
+
+### Code Quality
+
+```bash
+# Format code
+cargo fmt
+
+# Run linter
+cargo clippy --all-targets --all-features
+
+# Security audit
+cargo audit
+
+# Generate documentation
+cargo doc --open
+```
+
+### Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines, CI/CD information, and contribution process.
+
 ### Advanced Options
 ```yaml
     # The below section of the config allows setting specific options for each client, such as the requests they will handle.
@@ -165,7 +291,7 @@ plugins:
         searching: false # Disables the ability to search for videos.
 
 
-## Available Clients
+## 📊 Available Clients
 
 Currently, the following clients are available for use:
 
@@ -187,7 +313,7 @@ Currently, the following clients are available for use:
 > Livestreams do not yield Opus formats so will always require transcoding.
 
 
-## Using OAuth Tokens
+## 🔐 Using OAuth Tokens
 You may notice that some requests are flagged by YouTube, causing an error message asking you to sign in to confirm you're not a bot.
 With OAuth integration, you can request that `youtube-source-rust` use your account credentials to appear as a normal user, with varying degrees
 of efficacy. **You do _not_ need to use `poToken` with OAuth.**
@@ -262,7 +388,7 @@ play a track like:
 }
 ```
 
-## Using a `poToken`
+## 🎫 Using a `poToken`
 A `poToken`, also known as a "Proof of Origin Token" is a way to identify what requests originate from.
 In YouTube's case, this is sent as a JavaScript challenge that browsers must evaluate, and send back the resolved
 string. Typically, this challenge would remain unsolved for bots as more often than not, they don't simulate an entire
@@ -297,7 +423,7 @@ plugins:
       visitorData: "paste your visitor_data here"
 ```
 
-## REST routes (`plugin` only)
+## 🌐 REST Routes (`plugin` only)
 ### `POST` `/youtube`
 
 Body:
@@ -377,7 +503,7 @@ Example response:
 
 
 
-## Migration from Java Implementation
+## 📈 Migration from Java Implementation
 
 This client is intended as a direct replacement for the Java `YoutubeAudioSourceManager`,
 which has been deprecated in a recent release of [Lavalink-Devs/Lavaplayer](https://github.com/lavalink-devs/lavaplayer).
@@ -411,6 +537,6 @@ Typically, clients are not removed unless there is good reason, such as being de
 In such scenarios, we anticipate that you have ceased usage of such clients prior to their removal, so do not expect any code breakage,
 however we advise that you periodically check and keep your client list up to date due to this.
 
-## Additional Support
+## 💬 Additional Support
 If you need additional help with using this source, that's not covered here or in any of the issues,
 [join our Discord server](https://discord.gg/ZW4s47Ppw4).

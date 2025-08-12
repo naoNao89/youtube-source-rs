@@ -1,0 +1,132 @@
+services:
+  # Lavalink v4 (Latest)
+  lavalink-v4:
+    image: ghcr.io/lavalink-devs/lavalink:4-alpine
+    container_name: lavalink-v4-test
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx1G
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    volumes:
+      - ./lavalink-v4-config:/opt/Lavalink/config:ro
+      - ./plugins:/opt/Lavalink/plugins:rw
+      - ./logs/v4:/opt/Lavalink/logs:rw
+    ports:
+      - "2333:2333"
+    networks:
+      - lavalink-test
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2333/version"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Lavalink v3 (Legacy support)
+  lavalink-v3:
+    image: ghcr.io/lavalink-devs/lavalink:3.7-alpine
+    container_name: lavalink-v3-test
+    restart: unless-stopped
+    environment:
+      - _JAVA_OPTIONS=-Xmx1G
+      - SERVER_PORT=2334
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    volumes:
+      - ./lavalink-v3-config:/opt/Lavalink/config:ro
+      - ./plugins:/opt/Lavalink/plugins:rw
+      - ./logs/v3:/opt/Lavalink/logs:rw
+    ports:
+      - "2334:2334"
+    networks:
+      - lavalink-test
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:2334/version"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Redis for session management (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: lavalink-redis-test
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - lavalink-test
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+  # Test bot for integration testing
+  test-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.testbot
+    container_name: lavalink-test-bot
+    restart: unless-stopped
+    environment:
+      - LAVALINK_V4_HOST=lavalink-v4
+      - LAVALINK_V4_PORT=2333
+      - LAVALINK_V3_HOST=lavalink-v3
+      - LAVALINK_V3_PORT=2334
+      - LAVALINK_PASSWORD=youshallnotpass
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      lavalink-v4:
+        condition: service_healthy
+      lavalink-v3:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - lavalink-test
+    volumes:
+      - ./test-results:/app/test-results:rw
+
+  # Prometheus for monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lavalink-prometheus-test
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    networks:
+      - lavalink-test
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lavalink-grafana-test
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - lavalink-test
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+
+networks:
+  lavalink-test:
+    driver: bridge
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:
