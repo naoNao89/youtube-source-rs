@@ -38,7 +38,7 @@ futures = { version = "0.3", optional = true }
 criterion = { version = "0.5", features = ["html_reports"] }
 tempfile = "3.8"
 pretty_assertions = "1.4"
-rstest = "0.18"
+rstest = "0.26"
 
 [[bench]]
 name = "client_performance"
