@@ -74,38 +74,41 @@ mod lavalink_tests {
         }
 
         async fn get_stats(&self) -> Result<Value, Box<dyn std::error::Error>> {
-            // Try v4 endpoint first, fall back to v3 if it fails
-            let v4_url = format!("{}/v4/stats", self.base_url);
-            let v3_url = format!("{}/stats", self.base_url);
+            // Try multiple endpoints in order: v4, v3, legacy
+            let endpoints = [
+                format!("{}/v4/stats", self.base_url),
+                format!("{}/v3/stats", self.base_url),
+                format!("{}/stats", self.base_url),
+            ];
 
-            // First attempt: v4 endpoint
-            let v4_response = self
-                .client
-                .get(&v4_url)
-                .header("Authorization", &self.password)
-                .send()
-                .await;
+            let mut last_error = None;
 
-            match v4_response {
-                Ok(resp) if resp.status().is_success() => {
-                    return Ok(resp.json().await?);
-                }
-                Ok(_) | Err(_) => {
-                    // v4 failed, try v3 endpoint
-                    let v3_response = self
-                        .client
-                        .get(&v3_url)
-                        .header("Authorization", &self.password)
-                        .send()
-                        .await?;
+            for endpoint in &endpoints {
+                let response = self
+                    .client
+                    .get(endpoint)
+                    .header("Authorization", &self.password)
+                    .send()
+                    .await;
 
-                    if v3_response.status().is_success() {
-                        Ok(v3_response.json().await?)
-                    } else {
-                        Err(format!("HTTP {}: {}", v3_response.status(), v3_response.text().await?).into())
+                match response {
+                    Ok(resp) if resp.status().is_success() => {
+                        return Ok(resp.json().await?);
+                    }
+                    Ok(resp) => {
+                        last_error = Some(format!(
+                            "HTTP {}: {}",
+                            resp.status(),
+                            resp.text().await.unwrap_or_else(|_| "Failed to read response".to_string())
+                        ));
+                    }
+                    Err(e) => {
+                        last_error = Some(format!("Request failed: {}", e));
                     }
                 }
             }
+
+            Err(last_error.unwrap_or_else(|| "All endpoints failed".to_string()).into())
         }
     }
 
