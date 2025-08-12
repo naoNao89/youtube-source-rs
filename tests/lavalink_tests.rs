@@ -99,7 +99,9 @@ mod lavalink_tests {
                         last_error = Some(format!(
                             "HTTP {}: {}",
                             resp.status(),
-                            resp.text().await.unwrap_or_else(|_| "Failed to read response".to_string())
+                            resp.text()
+                                .await
+                                .unwrap_or_else(|_| "Failed to read response".to_string())
                         ));
                     }
                     Err(e) => {
@@ -108,7 +110,9 @@ mod lavalink_tests {
                 }
             }
 
-            Err(last_error.unwrap_or_else(|| "All endpoints failed".to_string()).into())
+            Err(last_error
+                .unwrap_or_else(|| "All endpoints failed".to_string())
+                .into())
         }
     }
 
@@ -135,7 +139,10 @@ mod lavalink_tests {
                                 return true;
                             }
                             Err(e) => {
-                                println!("Lavalink at {url} responded but couldn't read response: {}", e);
+                                println!(
+                                    "Lavalink at {url} responded but couldn't read response: {}",
+                                    e
+                                );
                             }
                         }
                     } else {
@@ -176,8 +183,14 @@ mod lavalink_tests {
             panic!("Failed to get version from Lavalink v4: {}", e);
         });
 
-        assert!(version.is_object(), "Version response should be a JSON object");
-        assert!(version["version"].is_string(), "Version should contain a version string");
+        assert!(
+            version.is_object(),
+            "Version response should be a JSON object"
+        );
+        assert!(
+            version["version"].is_string(),
+            "Version should contain a version string"
+        );
         println!(
             "Lavalink v4 version: {}",
             serde_json::to_string_pretty(&version).unwrap()
@@ -197,8 +210,14 @@ mod lavalink_tests {
             panic!("Failed to get version from Lavalink v3: {}", e);
         });
 
-        assert!(version.is_object(), "Version response should be a JSON object");
-        assert!(version["version"].is_string(), "Version should contain a version string");
+        assert!(
+            version.is_object(),
+            "Version response should be a JSON object"
+        );
+        assert!(
+            version["version"].is_string(),
+            "Version should contain a version string"
+        );
         println!(
             "Lavalink v3 version: {}",
             serde_json::to_string_pretty(&version).unwrap()
@@ -412,9 +431,14 @@ mod lavalink_tests {
         let result = lavalink_client.load_tracks("dQw4w9WgXcQ").await;
         match result {
             Ok(tracks) => {
-                let load_type = tracks.get("loadType").and_then(|v| v.as_str()).unwrap_or("");
+                let load_type = tracks
+                    .get("loadType")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
                 if load_type == "error" {
-                    println!("YouTube access restricted when loading tracks; skipping strict assertion");
+                    println!(
+                        "YouTube access restricted when loading tracks; skipping strict assertion"
+                    );
                 } else {
                     println!("✓ Lavalink returned loadType: {}", load_type);
                 }
@@ -448,9 +472,18 @@ mod lavalink_tests {
             panic!("Failed to get v4 stats: {}", e);
         });
         assert!(v4_stats.is_object(), "v4 stats should be a JSON object");
-        assert!(v4_stats["players"].is_number(), "v4 stats should have players count");
-        assert!(v4_stats["playingPlayers"].is_number(), "v4 stats should have playingPlayers count");
-        assert!(v4_stats["uptime"].is_number(), "v4 stats should have uptime");
+        assert!(
+            v4_stats["players"].is_number(),
+            "v4 stats should have players count"
+        );
+        assert!(
+            v4_stats["playingPlayers"].is_number(),
+            "v4 stats should have playingPlayers count"
+        );
+        assert!(
+            v4_stats["uptime"].is_number(),
+            "v4 stats should have uptime"
+        );
         println!(
             "✓ Lavalink v4 stats: {}",
             serde_json::to_string_pretty(&v4_stats).unwrap()
@@ -461,9 +494,18 @@ mod lavalink_tests {
             panic!("Failed to get v3 stats: {}", e);
         });
         assert!(v3_stats.is_object(), "v3 stats should be a JSON object");
-        assert!(v3_stats["players"].is_number(), "v3 stats should have players count");
-        assert!(v3_stats["playingPlayers"].is_number(), "v3 stats should have playingPlayers count");
-        assert!(v3_stats["uptime"].is_number(), "v3 stats should have uptime");
+        assert!(
+            v3_stats["players"].is_number(),
+            "v3 stats should have players count"
+        );
+        assert!(
+            v3_stats["playingPlayers"].is_number(),
+            "v3 stats should have playingPlayers count"
+        );
+        assert!(
+            v3_stats["uptime"].is_number(),
+            "v3 stats should have uptime"
+        );
         println!(
             "✓ Lavalink v3 stats: {}",
             serde_json::to_string_pretty(&v3_stats).unwrap()
