@@ -74,28 +74,36 @@ mod lavalink_tests {
         }
 
         async fn get_stats(&self) -> Result<Value, Box<dyn std::error::Error>> {
-            // Prefer v4 endpoint, fall back to legacy if unavailable.
-            // This avoids relying on port heuristics and makes tests robust across setups.
-            let try_fetch = |url: String| async {
-                let resp = self
-                    .client
-                    .get(&url)
-                    .header("Authorization", &self.password)
-                    .send()
-                    .await?;
-                if resp.status().is_success() {
-                    Ok::<Value, Box<dyn std::error::Error>>(resp.json().await?)
-                } else {
-                    Err(format!("HTTP {}: {}", resp.status(), resp.text().await?).into())
-                }
-            };
+            // Try v4 endpoint first, fall back to v3 if it fails
+            let v4_url = format!("{}/v4/stats", self.base_url);
+            let v3_url = format!("{}/stats", self.base_url);
 
-            // Try v4-style first
-            match try_fetch(format!("{}/v4/stats", self.base_url)).await {
-                Ok(json) => Ok(json),
-                Err(_) => {
-                    // Fall back to legacy v3 path
-                    try_fetch(format!("{}/stats", self.base_url)).await
+            // First attempt: v4 endpoint
+            let v4_response = self
+                .client
+                .get(&v4_url)
+                .header("Authorization", &self.password)
+                .send()
+                .await;
+
+            match v4_response {
+                Ok(resp) if resp.status().is_success() => {
+                    return Ok(resp.json().await?);
+                }
+                Ok(_) | Err(_) => {
+                    // v4 failed, try v3 endpoint
+                    let v3_response = self
+                        .client
+                        .get(&v3_url)
+                        .header("Authorization", &self.password)
+                        .send()
+                        .await?;
+
+                    if v3_response.status().is_success() {
+                        Ok(v3_response.json().await?)
+                    } else {
+                        Err(format!("HTTP {}: {}", v3_response.status(), v3_response.text().await?).into())
+                    }
                 }
             }
         }
